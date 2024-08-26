@@ -1,28 +1,47 @@
 cmake_minimum_required(VERSION 3.11)
 
-project(hope_thread)
+project(hope_thread VERSION 1.0.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -O3 -fPIC" )
-set( CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -O3 -fPIC" )
+add_library(hope_thread INTERFACE)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/out)
-
-file(GLOB CL_HEADERS
-    hope_thread/*.h
-    hope_thread/platform/*.h
-    hope_thread/containers/queue/*.h
-    hope_thread/containers/hashmap/*.h
-    hope_thread/synchronization/*.h
-    hope_thread/runtime/*.h
+target_include_directories(hope_thread INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
 )
 
-add_library(hope_thread INTERFACE ${CL_HEADERS})
-target_include_directories(hope_thread INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+include(GNUInstallDirs)
+install(TARGETS hope_thread
+    EXPORT hope_thread_targets
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
 
-set(CMAKE_INSTALL_DIRECTORY ${CMAKE_BINARY_DIR})
+install(DIRECTORY hope_thread/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/hope_thread)
 
-INSTALL(DIRECTORY hope_thread/ DESTINATION ${CMAKE_INSTALL_DIRECTORY}/include/hope_thread
-        FILES_MATCHING PATTERN "*.h")
+install(EXPORT hope_thread_targets
+    FILE hope_thread-targets.cmake
+    NAMESPACE hope_thread::
+    DESTINATION share/hope_thread
+)
+
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/hope_threadConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/hope_thread-config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/hope_thread-config.cmake"
+    @ONLY
+)
+
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/hope_thread-config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/hope_threadConfigVersion.cmake"
+    DESTINATION share/hope_thread
+)
